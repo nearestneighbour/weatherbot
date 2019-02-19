@@ -7,13 +7,15 @@ def send_message(prepared_data):
     message_url = BOT_URL + 'sendMessage'
     requests.post(message_url, json=prepared_data)
 
-@app.route('/')
+@app.route('/hello')
 def hello_world():
     return 'Hello, World!12'
 
-@app.route('/txt', methods=['GET'])
+@app.route('/txt', methods=['POST'])
 def getmsg():
-    #chid = request.form['chat_id']
-    #msg = request.form['text']
-    #send_message({'chat_id':chid,'text':msg})
+    chid = request.form['chat_id']
+    msg = request.form['text']
+    send_message({'chat_id':chid,'text':msg})
     return "test"
+
+app.run()
