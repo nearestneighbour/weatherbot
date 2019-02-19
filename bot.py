@@ -12,7 +12,7 @@ def send_message(prepared_data):
 def hello_world():
     return 'Hello, World!12'
 
-@app.route('/', methods='GET')
+@app.route('/', methods=['GET'])
 def getmsg():
     chid = request.form['chat_id']
     msg = request.form['text']

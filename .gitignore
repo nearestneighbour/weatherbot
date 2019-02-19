@@ -1,4 +1,7 @@
 old.py
 *.pyc
 __pycache__/
-venv/
+
+bin/
+include/
+lib/
