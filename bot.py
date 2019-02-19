@@ -17,3 +17,4 @@ def getmsg():
     chid = request.form['chat_id']
     msg = request.form['text']
     send_message({'chat_id':chid,'text':msg})
+    return "test"
