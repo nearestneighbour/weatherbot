@@ -12,10 +12,15 @@ def send_message(prepared_data):
 def hello_world():
     return 'Hello, World!12'
 
-@app.route('/txt', methods=['GET'])
+@app.route('/txt', methods=['GET','POST'])
 def getmsg():
-    chid = request.args['chat_id']
-    msg = request.args['text']
+    if request.method == 'GET':
+        chid = request.args['chat_id']
+        msg = request.args['text']
+    elif request.method == 'POST':
+        data = request.get_json()
+        chid = data['message']['chat']['id']
+        msg = data['message']['text']
     send_message({'chat_id':chid,'text':msg})
     return "test"
 
