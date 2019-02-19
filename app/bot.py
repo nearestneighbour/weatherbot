@@ -27,3 +27,5 @@ def getmsg():
 
     send_message(chat,text)
     return ''
+
+# start chat? -> create chat_id file, show menu with weather/wiki/etc options
