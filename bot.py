@@ -1,31 +1,31 @@
-from flask import Flask, request
+from flask import Flask, request, render_template
 import requests
 
-app = Flask(__name__)
 mychat = 571267260
 API_KEY = '694985196:AAFoZWhhsDF4qyvj0bJQNjn89PZypztg3Xc'
 BOT_URL = 'https://api.telegram.org/bot' + API_KEY + '/'
 weathertxt = 'Temperatuur: {} C\nWind: {} m/s\nRegenkans: {}%'
 
+app = Flask(__name__)
+
 def send_message(chat_id, text):
     url = BOT_URL + 'sendMessage'
     data = {'chat_id':chat_id, 'text':text}
-    requests.post(message_url, json=data)
+    requests.post(url, json=data)
 
 def getweather(loc):
     if isinstance(loc, dict):
         loc = str(loc['latitude'])+','+str(loc['longitude'])
     url = 'https://weerlive.nl/api/json-10min.php?locatie=' + loc
     data = requests.get(url,timeout=10).json()['liveweer'][0]
-    response = weathermsg.format(data['temp'],data['windms'],data['d0neerslag'])
+    response = weathertxt.format(data['temp'],data['windms'],data['d0neerslag'])
     return response
 
+@app.route('/')
+def index():
+    return render_template('index.html')
 
-@app.route('/hello')
-def hello_world():
-    return 'Hello, World!12'
-
-@app.route('/txt', methods=['POST'])
+@app.route('/tgbot', methods=['POST'])
 def getmsg():
     data = request.get_json()
     if 'message' in data:
