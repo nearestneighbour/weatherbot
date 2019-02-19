@@ -1,7 +1,4 @@
-bot.py
+old.py
 *.pyc
-ngrok
-__pycache__
-bin
-include
-lib
+__pycache__/
+venv/
