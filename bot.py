@@ -1,5 +1,4 @@
 from flask import Flask, request
-import requests
 
 app = Flask(__name__)
 BOT_URL = 'https://api.telegram.org/bot694985196:AAFoZWhhsDF4qyvj0bJQNjn89PZypztg3Xc/'
@@ -14,7 +13,7 @@ def hello_world():
 
 @app.route('/txt', methods=['GET'])
 def getmsg():
-    chid = request.form['chat_id']
-    msg = request.form['text']
-    send_message({'chat_id':chid,'text':msg})
+    #chid = request.form['chat_id']
+    #msg = request.form['text']
+    #send_message({'chat_id':chid,'text':msg})
     return "test"
