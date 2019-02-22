@@ -2,12 +2,18 @@ from app import app
 
 import requests
 import os
+from math import tan, cos, pi
+from PIL import Image
+from io import BytesIO
 
 botlist = {}
 
 BOT_URL = 'https://api.telegram.org/bot' + os.environ['apikey'] + '/'
-STAT_URL = 'http://api.openweathermap.org/data/2.5/weather?appid=' + os.environ['weatherapi']
-MAP_URL = ''
+w_api = os.environ['weatherapi']
+STAT_URL = 'http://api.openweathermap.org/data/2.5/weather?appid=' + w_api
+MAP_URL = 'http://sat.owm.io/sql/{}/{}/{}?appid=' + w_api
+TEMP_URL = 'https://tile.openweathermap.org/map/temp_new/{}/{}/{}.png?appid=' + w_api
+
 mainhelp = """Hi there. Here's how to use the weatherbot:
 command [options]
 Commands: map, stat, location, coordinates
@@ -40,7 +46,9 @@ class tgbot:
             elif txt[0] == 'coordinates':
                 self.set_location(txt[1].split(','))
             elif txt[0] == 'stat':
-                self.send_msg(self.get_stat())
+                self.send_stats()
+            elif txt[0] == 'map':
+                self.send_map()
 
     def set_location(self, loc):
         p = {}
@@ -63,9 +71,10 @@ class tgbot:
             +'e.g. ''location Nijmegen,NL''.'
         )
 
-    def get_stat(self):
+    def send_stats(self):
         if self.location == None:
-            return 'Please set location first.'
+            self.send_msg('Please set location first.')
+            return
         p = {'lat':self.coordinates[0], 'lon':self.coordinates[1]}
         data = requests.get(STAT_URL, params=p).json()
         weather = {'Weather':data['weather'][0]['description']}
@@ -73,11 +82,26 @@ class tgbot:
         weather['Humidity'] = data['main']['humidity']
         txt = ''
         for k, v in weather.items():
-            txt += '{:11.5}: {}\n'.format(k,v)
-        return txt[:-1]
+            txt += '{:11}: {.5}\n'.format(k,v)
+        self.send_msg(txt[:-1])
 
-    def get_map(self):
-        pass
+    def send_map(self):
+        # best coords: zoom=7, x=65-66, y=41-42 - temp coord: 7/65/42
+        if self.location == None:
+            return 'Please set location first.'
+        z, x, y = 7, 65, 42
+        #x, y = geotocoord(self.coordinates, z)
+        data = request.get(MAP_URL.format(z, x, y))
+        map_img = Image.open(BytesIO(response.content))
+        data = request.get(TEMP_URL.format(z, x, y))
+        temp_img = Image.open(BytesIO(response.content))
+        img = Image.blend(map_img, temp_img, 0.5)
+        bio = BytesIO()
+        bio.name = '1.png'
+        img.save(bio, 'PNG')
+        bio.seek(0)
+        f = {'photo': ('1.png',bio,'image/png')}
+        requests.post(BOT_URL + 'sendPhoto', files=f)
 
     def help(self, txt):
         if len(txt) == 1:
@@ -93,3 +117,10 @@ class tgbot:
 
 def ftoc(f): # fahrenheit to celcius
     return (f-32)*5/9
+
+def geotocoord(coord, zoom):
+    n = 2**zoom
+    x = n * (coord[1]+180) / 360 # lon
+    lat = pi * coord[0] / 180
+    y = n * (1 - (log(tan(lat) + 1/cos(lat)) / pi)) / 2
+    return x, y
