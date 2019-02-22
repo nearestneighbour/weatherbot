@@ -6,8 +6,6 @@ from math import tan, cos, pi
 from PIL import Image
 from io import BytesIO
 
-botlist = {}
-
 BOT_URL = 'https://api.telegram.org/bot' + os.environ['apikey'] + '/'
 w_api = os.environ['weatherapi']
 STAT_URL = 'http://api.openweathermap.org/data/2.5/weather?appid=' + w_api
@@ -105,8 +103,8 @@ class tgbot:
         requests.post(BOT_URL + 'sendPhoto?chat_id=' + str(self.chat_id), files=f)
 
     def help(self, txt):
-        if len(txt) == 1:
-            return mainhelp
+        #if len(txt) == 1:
+        #    return mainhelp
         return ''
 
     def send_msg(self, text):

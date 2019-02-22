@@ -22,9 +22,3 @@ def getmsg():
 @app.route('/')
 def index():
     return render_template('index.html')
-
-"""
-@app.route('/weather', methods=['GET'])
-def weatherpage():
-    pass
-"""
