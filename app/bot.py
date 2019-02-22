@@ -11,8 +11,8 @@ botlist = {}
 BOT_URL = 'https://api.telegram.org/bot' + os.environ['apikey'] + '/'
 w_api = os.environ['weatherapi']
 STAT_URL = 'http://api.openweathermap.org/data/2.5/weather?appid=' + w_api
-MAP_URL = 'http://sat.owm.io/sql/{}/{}/{}?appid=' + w_api
-TEMP_URL = 'https://tile.openweathermap.org/map/temp_new/{}/{}/{}.png?appid=' + w_api
+MAP_URL = 'http://sat.owm.io/sql/{}/{}/{}?from=cloudless&appid=' + w_api
+TEMP_URL = 'https://tile.openweathermap.org/map/precipitation_new/{}/{}/{}.png?appid=' + w_api
 
 mainhelp = """Hi there. Here's how to use the weatherbot:
 command [options]
@@ -88,20 +88,21 @@ class tgbot:
     def send_map(self):
         # best coords: zoom=7, x=65-66, y=41-42 - temp coord: 7/65/42
         if self.location == None:
-            return 'Please set location first.'
+            self.send_msg('Please set location first.')
+            return
         z, x, y = 7, 65, 42
         #x, y = geotocoord(self.coordinates, z)
-        data = request.get(MAP_URL.format(z, x, y))
-        map_img = Image.open(BytesIO(response.content))
-        data = request.get(TEMP_URL.format(z, x, y))
-        temp_img = Image.open(BytesIO(response.content))
+        data = requests.get(MAP_URL.format(z, x, y))
+        map_img = Image.open(BytesIO(data.content))
+        data = requests.get(TEMP_URL.format(z, x, y))
+        temp_img = Image.open(BytesIO(data.content))
         img = Image.blend(map_img, temp_img, 0.5)
         bio = BytesIO()
-        bio.name = '1.png'
+        #bio.name = '1.png'
         img.save(bio, 'PNG')
         bio.seek(0)
         f = {'photo': ('1.png',bio,'image/png')}
-        requests.post(BOT_URL + 'sendPhoto', files=f)
+        requests.post(BOT_URL + 'sendPhoto?chat_id=' + str(self.chat_id), files=f)
 
     def help(self, txt):
         if len(txt) == 1:
