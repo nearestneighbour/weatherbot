@@ -1,9 +1,14 @@
-from app import app, botlist
+from app import app, URLS
 from app.bot import tgbot
 #from app.weather import getweather
 
 from flask import request, render_template
 import requests
+import psycopg2
+import os
+
+DB_URL = os.environ['DATABASE_URL']
+conn = psycopg2.connect(DB_URL, sslmode='require')
 
 @app.route('/tgbot', methods=['POST'])
 def getmsg():
