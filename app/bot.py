@@ -12,7 +12,7 @@ BOT_URL = 'https://api.telegram.org/bot' + os.environ['apikey'] + '/'
 w_api = os.environ['weatherapi']
 STAT_URL = 'http://api.openweathermap.org/data/2.5/weather?appid=' + w_api
 MAP_URL = 'http://sat.owm.io/sql/{}/{}/{}?from=cloudless&appid=' + w_api
-TEMP_URL = 'https://tile.openweathermap.org/map/precipitation_new/{}/{}/{}.png?appid=' + w_api
+TEMP_URL = 'https://tile.openweathermap.org/map/{}_new/{}/{}/{}.png?appid=' + w_api
 
 mainhelp = """Hi there. Here's how to use the weatherbot:
 command [options]
@@ -48,7 +48,7 @@ class tgbot:
             elif txt[0] == 'stat':
                 self.send_stats()
             elif txt[0] == 'map':
-                self.send_map()
+                self.send_map(txt)
 
     def set_location(self, loc):
         p = {}
@@ -85,22 +85,22 @@ class tgbot:
             txt += '{:11}: {.5}\n'.format(k,v)
         self.send_msg(txt[:-1])
 
-    def send_map(self):
-        # best coords: zoom=7, x=65-66, y=41-42 - temp coord: 7/65/42
+    def send_map(self, txt):
+        # best coords: zoom=7, x=65-66, y=41-42 - temp coord: 7/65/42 = or 5/16/10
         if self.location == None:
             self.send_msg('Please set location first.')
             return
         z, x, y = 7, 65, 42
         #x, y = geotocoord(self.coordinates, z)
-        data = requests.get(MAP_URL.format(z, x, y))
-        map_img = Image.open(BytesIO(data.content))
-        data = requests.get(TEMP_URL.format(z, x, y))
-        temp_img = Image.open(BytesIO(data.content))
-        img = Image.blend(map_img, temp_img, 0.5)
+        if len(txt) == 1:
+            data = requests.get(MAP_URL.format(z, x, y))
+        else:
+            data = requests.get(TEMP_URL.format(txt[1],z,x,y))
+        img = Image.open(BytesIO(data.content))
+        #img = Image.blend(map_img, temp_img, 0.5)
         bio = BytesIO()
-        #bio.name = '1.png'
         img.save(bio, 'PNG')
-        bio.seek(0)
+        bio.seek(0) # remove?
         f = {'photo': ('1.png',bio,'image/png')}
         requests.post(BOT_URL + 'sendPhoto?chat_id=' + str(self.chat_id), files=f)
 
