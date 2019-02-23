@@ -24,7 +24,7 @@ class tgbot:
                 self.send_msg(self.help(txt))
             elif txt[0] == 'location':
                 if len(txt) == 1:
-                    self.send_message()
+                    self.send_msg()
                 self.set_location(loc=' '.join(txt[1:]))
             elif txt[0] == 'coordinates':
                 self.set_location(coord=txt[1])
