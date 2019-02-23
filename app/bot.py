@@ -2,7 +2,7 @@ from app import app, URL, sql
 
 import requests
 import os
-from math import tan, cos, pi, floor
+from math import tan, cos, pi, floor, log
 from PIL import Image
 from io import BytesIO
 
@@ -23,6 +23,8 @@ class tgbot:
             if txt[0] == 'help':
                 self.send_msg(self.help(txt))
             elif txt[0] == 'location':
+                if len(txt) == 1:
+                    self.send_message()
                 self.set_location(loc=' '.join(txt[1:]))
             elif txt[0] == 'coordinates':
                 self.set_location(coord=txt[1])
@@ -38,7 +40,7 @@ class tgbot:
         p = {'lat':self.coord[0], 'lon':self.coord[1]}
         data = requests.get(URL['STAT'], params=p).json()
         weather = {'Weather':data['weather'][0]['description']}
-        weather['Temperature'] = data['main']['temp'] - 273.15 # K to C
+        weather['Temperature'] = floor(10*data['main']['temp'] - 2731.5) / 10 # K to C
         weather['Humidity'] = data['main']['humidity']
         txt = ''
         for k, v in weather.items():
@@ -50,23 +52,25 @@ class tgbot:
         if self.location == None:
             self.send_msg('Please set location first.')
             return
-        z, x, y = 7, 65, 42
-        #x, y = geotocoord(self.coord, z)
+        #z, x, y = 7, 65, 42
+        z = 7
+        x, y = geotocoord(self.coord, z)
         if len(txt) == 1:
-            data = requests.get(URL['MAP'].format(z, x, y))
+            # street map
+            return
+        elif txt[1] == 'sat':
+            data = requests.get(URL['SAT'].format(z, x, y))
         else:
             data = requests.get(URL['WMAP'].format(txt[1],z,x,y))
         img = Image.open(BytesIO(data.content))
         #img = Image.blend(map_img, temp_img, 0.5)
-        bio = BytesIO()
-        img.save(bio, 'PNG')
-        bio.seek(0) # remove?
-        f = {'photo': ('1.png',bio,'image/png')}
-        requests.post(URL['BOT'] + 'sendPhoto?chat_id=' + str(self.chat_id), files=f)
+        self.send_img(img)
 
     def set_location(self, loc=None, coord=None, send=True):
         if coord == None:
             if loc == None:
+                if send:
+                    self.send_message(locationset.format(self.location, self.coord))
                 return
             else:
                 self.location = loc
@@ -78,13 +82,13 @@ class tgbot:
             self.coord = [float(i) for i in coord.split(',')]
             p = {'lat':self.coord[0], 'lon':self.coord[1]}
         data = requests.get(URL['STAT'], params=p).json()
-        if 'name' not in data and send:
+        if ('name' not in data) and send:
             self.send_msg('Unknown location.')
             return
         self.location = data['name'] + ',' + data['sys']['country']
         self.coord = [data['coord']['lat'],data['coord']['lon']]
         if send:
-            self.send_msg(locationset.format(self.location,self.coord))
+            self.send_msg(locationset.format(self.location, self.coord))
         self.cur.execute(sql.set(self.chat_id, '{},{}'.format(self.coord[0],self.coord[1])))
 
     def help(self, txt):
@@ -93,28 +97,33 @@ class tgbot:
         return ''
 
     def send_msg(self, text):
-        data = {'chat_id':self.chat_id, 'text':text}
+        data = {'chat_id':self.chat_id, 'text':text, 'parse_mode':'Markdown'}
         requests.post(URL['BOT'] + 'sendMessage', json=data)
 
     def send_img(self, img):
-        pass
+        if isinstance(img, object):
+            bio = BytesIO()
+            img.save(bio, 'PNG')
+            bio.seek(0) # remove?
+            f = {'photo': ('1.png',bio,'image/png')}
+            requests.post(URL['BOT'] + 'sendPhoto?chat_id=' + str(self.chat_id), files=f)
 
 def geotocoord(coord, zoom):
     n = 2**zoom
     x = n * (coord[1]+180) / 360 # lon
     lat = pi * coord[0] / 180
     y = n * (1 - (log(tan(lat) + 1/cos(lat)) / pi)) / 2
-    return x, y
+    return floor(x), floor(y) # !!!
 
 
 mainhelp = """Hi there. Here's how to use the weatherbot:
-command [options]
-Commands: map, stat, location, coord
-Examples of commands:
-'location Nijmegen' sets the current location to Nijmegen.
-'coordinates 51.84,8.84' sets the current location to lat.51.84, lon.8.84
-'stat temp' gives the current temperature on the current location.
-'map clouds Tilburg' gives a map with clouding above the current location.
+Example commands:
+**location <location>** sets the current location to a city/region/...
+**coordinates 51.84,8.84** sets the current location to lat 51.84, lon 8.84
+**map wind** gives a wind map over your current location. Other maps are *clouds,
+\bprecipitation, temp, pressure, sat*
+**stat** gives some weather statistics
+
 Type 'help command' to get more info on a specific command.
 \bType 'help' to see this help message."""
 

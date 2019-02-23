@@ -7,5 +7,5 @@ lib/
 
 old/
 .env
-test.py
-testtxt.py
+
+test*
