@@ -25,7 +25,3 @@ def getmsg():
             else:
                 botlist[chat_id] = tgbot(chat_id, msg, cur, row[1])
     return ''
-
-@app.route('/')
-def index():
-    return render_template('index.html')
