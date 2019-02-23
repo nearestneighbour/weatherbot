@@ -11,41 +11,43 @@ class tgbot:
         self.chat_id = chat_id
         self.cur = cur # SQL DB cursor
         self.location = None
-        if coord != None:
-            self.coord = coord.split(',')
-            self.set_location(self.coord, False)
-        else:
-            self.coord = coord
+        self.coord = None
+        self.set_location(coord=coord, send=False)
         self.process_msg(msg)
 
     def process_msg(self, msg):
         if 'location' in msg:
-            self.set_location(msg['location'])
+            self.set_location(coord=msg['location'])
         elif 'text' in msg:
             txt = msg['text'].lower().split(' ')
             if txt[0] == 'help':
                 self.send_msg(self.help(txt))
             elif txt[0] == 'location':
-                self.set_location(' '.join(txt[1:]))
+                self.set_location(loc=' '.join(txt[1:]))
             elif txt[0] == 'coordinates':
-                self.set_location(txt[1].split(','))
+                self.set_location(coord=txt[1])
             elif txt[0] == 'stat':
                 self.send_stats()
             elif txt[0] == 'map':
                 self.send_map(txt)
 
-    def set_location(self, loc, send=True):
-        p = {}
-        if isinstance(loc, dict):
-            self.coord = [loc['latitude'],loc['longitude']]
-            p = {'lat':loc['latitude'], 'lon':loc['longitude']}
-        elif isinstance(loc, list):
-            self.coord = [float(i) for i in loc]
-            p = {'lat':loc[0], 'lon':loc[1]}
-        elif isinstance(loc, str):
-            self.location = loc
-            p = {'q':loc}
+    def set_location(self, loc=None, coord=None, send=True):
+        if coord == None:
+            if loc == None:
+                return
+            else:
+                self.location = loc
+                p = {'q':loc}
+        elif isinstance(coord, dict):
+            self.coord = [coord['latitude'],coord['longitude']]
+            p = {'lat':coord['latitude'], 'lon':coord['longitude']}
+        elif isinstance(coord, str):
+            self.coord = [float(i) for i in coord.split(',')]
+            p = {'lat':self.coord[0], 'lon':self.coord[1]}
         data = requests.get(URL['STAT'], params=p).json()
+        if 'name' not in data and send:
+            self.send_msg('Unknown location.')
+            return
         self.location = data['name'] + ',' + data['sys']['country']
         self.coord = [data['coord']['lat'],data['coord']['lon']]
         if send:
