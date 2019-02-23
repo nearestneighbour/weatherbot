@@ -2,7 +2,7 @@ from app import app, URL, sql
 
 import requests
 import os
-from math import tan, cos, pi
+from math import tan, cos, pi, floor
 from PIL import Image
 from io import BytesIO
 
@@ -65,7 +65,7 @@ class tgbot:
         weather['Humidity'] = data['main']['humidity']
         txt = ''
         for k, v in weather.items():
-            txt += '{:11}: {:.2f}\n'.format(k,v)
+            txt += '{}: {}\n'.format(k,v)
         self.send_msg(txt[:-1])
 
     def send_map(self, txt):
@@ -100,7 +100,8 @@ class tgbot:
         pass
 
 def ftoc(f): # fahrenheit to celcius
-    return (f-32)*5/9
+    c = (f-32)*5/9
+    return floor(10*c)/10
 
 def geotocoord(coord, zoom):
     n = 2**zoom
