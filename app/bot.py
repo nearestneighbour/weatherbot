@@ -31,29 +31,6 @@ class tgbot:
             elif txt[0] == 'map':
                 self.send_map(txt)
 
-    def set_location(self, loc=None, coord=None, send=True):
-        if coord == None:
-            if loc == None:
-                return
-            else:
-                self.location = loc
-                p = {'q':loc}
-        elif isinstance(coord, dict):
-            self.coord = [coord['latitude'],coord['longitude']]
-            p = {'lat':coord['latitude'], 'lon':coord['longitude']}
-        elif isinstance(coord, str):
-            self.coord = [float(i) for i in coord.split(',')]
-            p = {'lat':self.coord[0], 'lon':self.coord[1]}
-        data = requests.get(URL['STAT'], params=p).json()
-        if 'name' not in data and send:
-            self.send_msg('Unknown location.')
-            return
-        self.location = data['name'] + ',' + data['sys']['country']
-        self.coord = [data['coord']['lat'],data['coord']['lon']]
-        if send:
-            self.send_msg(locationset.format(self.location,self.coord))
-        self.cur.execute(sql.set(self.chat_id, '{},{}'.format(self.coord[0],self.coord[1])))
-
     def send_stats(self):
         if self.location == None:
             self.send_msg('Please set location first.')
@@ -61,7 +38,7 @@ class tgbot:
         p = {'lat':self.coord[0], 'lon':self.coord[1]}
         data = requests.get(URL['STAT'], params=p).json()
         weather = {'Weather':data['weather'][0]['description']}
-        weather['Temperature'] = ftoc(data['main']['temp'])
+        weather['Temperature'] = data['main']['temp'] - 273.15 # K to C
         weather['Humidity'] = data['main']['humidity']
         txt = ''
         for k, v in weather.items():
@@ -87,6 +64,29 @@ class tgbot:
         f = {'photo': ('1.png',bio,'image/png')}
         requests.post(URL['BOT'] + 'sendPhoto?chat_id=' + str(self.chat_id), files=f)
 
+    def set_location(self, loc=None, coord=None, send=True):
+        if coord == None:
+            if loc == None:
+                return
+            else:
+                self.location = loc
+                p = {'q':loc}
+        elif isinstance(coord, dict):
+            self.coord = [coord['latitude'],coord['longitude']]
+            p = {'lat':coord['latitude'], 'lon':coord['longitude']}
+        elif isinstance(coord, str):
+            self.coord = [float(i) for i in coord.split(',')]
+            p = {'lat':self.coord[0], 'lon':self.coord[1]}
+        data = requests.get(URL['STAT'], params=p).json()
+        if 'name' not in data and send:
+            self.send_msg('Unknown location.')
+            return
+        self.location = data['name'] + ',' + data['sys']['country']
+        self.coord = [data['coord']['lat'],data['coord']['lon']]
+        if send:
+            self.send_msg(locationset.format(self.location,self.coord))
+        self.cur.execute(sql.set(self.chat_id, '{},{}'.format(self.coord[0],self.coord[1])))
+
     def help(self, txt):
         #if len(txt) == 1:
         #    return mainhelp
@@ -98,10 +98,6 @@ class tgbot:
 
     def send_img(self, img):
         pass
-
-def ftoc(f): # fahrenheit to celcius
-    c = (f-32)*5/9
-    return floor(10*c)/10
 
 def geotocoord(coord, zoom):
     n = 2**zoom
