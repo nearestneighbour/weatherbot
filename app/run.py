@@ -1,14 +1,10 @@
-from app import app, URLS
+from app import app, cur, sql
 from app.bot import tgbot
-#from app.weather import getweather
 
 from flask import request, render_template
 import requests
-import psycopg2
-import os
 
-DB_URL = os.environ['DATABASE_URL']
-conn = psycopg2.connect(DB_URL, sslmode='require')
+botlist = {}
 
 @app.route('/tgbot', methods=['POST'])
 def getmsg():
@@ -21,7 +17,13 @@ def getmsg():
         if chat_id in botlist:
             botlist[chat_id].process_msg(msg)
         else:
-            botlist[chat_id] = tgbot(chat_id, msg)
+            cur.execute(sql.find(chat_id))
+            row = cur.fetchone()
+            if row == None:
+                cur.execute(sql.new(chat_id))
+                botlist[chat_id] = tgbot(chat_id, msg, cur)
+            else:
+                botlist[chat_id] = tgbot(chat_id, msg, cur, row[1])
     return ''
 
 @app.route('/')
