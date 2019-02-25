@@ -88,7 +88,7 @@ def get_location(chat_id, send=True):
         if result == None:
             send_msg(chat_id, 'Please set location first.')
         else:
-            send_msg(chat_id, locationset.format(result[1], ','.join(result[0])))
+            send_msg(chat_id, locationset.format(result[1], result[0]))
     return result
 
 def help(text):
