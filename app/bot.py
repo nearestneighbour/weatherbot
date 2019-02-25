@@ -1,119 +1,119 @@
-from app import app, URL, sql
+from app import cur, URL, sql
 
 import requests
-import os
 from math import tan, cos, pi, floor, log
 from PIL import Image
 from io import BytesIO
 
-class tgbot:
-    def __init__(self, chat_id, msg, cur, coord=None):
-        self.chat_id = chat_id
-        self.cur = cur # SQL DB cursor
-        self.location = None
-        self.coord = None
-        self.set_location(coord=coord, send=False)
-        self.process_msg(msg)
-
-    def process_msg(self, msg):
-        if 'location' in msg:
-            self.set_location(coord=msg['location'])
-        elif 'text' in msg:
-            txt = msg['text'].lower().split(' ')
-            if txt[0] == 'help':
-                self.send_msg(self.help(txt))
-            elif txt[0] == 'location':
-                if len(txt) == 1:
-                    self.send_msg()
-                self.set_location(loc=' '.join(txt[1:]))
-            elif txt[0] == 'coordinates':
-                self.set_location(coord=txt[1])
-            elif txt[0] == 'stat':
-                self.send_stats()
-            elif txt[0] == 'map':
-                self.send_map(txt)
-
-    def send_stats(self):
-        if self.location == None:
-            self.send_msg('Please set location first.')
-            return
-        p = {'lat':self.coord[0], 'lon':self.coord[1]}
-        data = requests.get(URL['STAT'], params=p).json()
-        weather = {'Weather':data['weather'][0]['description']}
-        weather['Temperature'] = floor(10*data['main']['temp'] - 2731.5) / 10 # K to C
-        weather['Humidity'] = data['main']['humidity']
-        txt = ''
-        for k, v in weather.items():
-            txt += '{}: {}\n'.format(k,v)
-        self.send_msg(txt[:-1])
-
-    def send_map(self, txt):
-        # best coords: zoom=7, x=65-66, y=41-42 - temp coord: 7/65/42 = or 5/16/10
-        if self.location == None:
-            self.send_msg('Please set location first.')
-            return
-        #z, x, y = 7, 65, 42
-        z = 7
-        x, y = geotocoord(self.coord, z)
-        if len(txt) == 1:
-            # street map
-            return
-        elif txt[1] == 'sat':
-            data = requests.get(URL['SAT'].format(z, x, y))
-        else:
-            data = requests.get(URL['WMAP'].format(txt[1],z,x,y))
-        img = Image.open(BytesIO(data.content))
-        #img = Image.blend(map_img, temp_img, 0.5)
-        self.send_img(img)
-
-    def set_location(self, loc=None, coord=None, send=True):
-        if coord == None:
-            if loc == None:
-                if send:
-                    self.send_message(locationset.format(self.location, self.coord))
-                return
+def process_msg(chat_id, msg):
+    if 'location' in msg:
+        set_location(chat_id, coord=msg['location'])
+    elif 'text' in msg:
+        text = msg['text'].lower().split(' ')
+        if text[0] == 'help':
+            send_msg(chat_id, help(text))
+        elif text[0] == 'location':
+            if len(text) == 1:
+                get_location(chat_id)
             else:
-                self.location = loc
-                p = {'q':loc}
-        elif isinstance(coord, dict):
-            self.coord = [coord['latitude'],coord['longitude']]
-            p = {'lat':coord['latitude'], 'lon':coord['longitude']}
+                set_location(chat_id, loc=' '.join(text[1:]))
+        elif text[0] == 'coordinates':
+            if len(text) == 1:
+                get_location(chat_id)
+            else:
+                set_location(chat_id, coord=text[1])
+        elif text[0] == 'stat':
+            send_stats(chat_id)
+        elif text[0] == 'map':
+            send_map(chat_id, text)
+
+def send_stats(chat_id):
+    coord = get_location(chat_id, False)
+    if coord == None:
+        send_msg(chat_id, 'Please set location first.')
+        return
+    coord = [float(i) for i in coord[0].split(',')]
+    p = {'lat': coord[0], 'lon': coord[1]}
+    data = requests.get(URL['STAT'], params=p).json()
+    weather = {'Weather': data['weather'][0]['description']}
+    weather['Temperature'] = floor(10*data['main']['temp'] - 2731.5) / 10 # K to C
+    weather['Humidity'] = data['main']['humidity']
+    text = ''
+    for k, v in weather.items():
+        text += '{}: {}\n'.format(k,v)
+    send_msg(chat_id, text[:-1])
+
+def send_map(chat_id, text):
+    # best coords: zoom=7, x=65-66, y=41-42 - temp coord: 7/65/42 = or 5/16/10
+    coord = get_location(chat_id, False)
+    if coord == None:
+        send_msg(chat_id, 'Please set location first.')
+        return
+    z = 7
+    x, y = geotocoord([float(i) for i in coord[0].split(',')], z)
+    x, y = floor(x), floor(y)
+    if len(text) == 1:
+        # street map
+        return
+    elif text[1] == 'sat':
+        data = requests.get(URL['SAT'].format(z, x, y))
+    else:
+        data = requests.get(URL['WMAP'].format(text[1],z,x,y))
+    img = Image.open(BytesIO(data.content))
+    #img = Image.blend(map_img, temp_img, 0.5)
+    send_img(chat_id, img)
+
+def set_location(chat_id, loc=None, coord=None, send=True):
+    if coord == None:
+        p = {'q': loc}
+    else:
+        if isinstance(coord, dict):
+            coord = [coord['latitude'],coord['longitude']]
         elif isinstance(coord, str):
-            self.coord = [float(i) for i in coord.split(',')]
-            p = {'lat':self.coord[0], 'lon':self.coord[1]}
-        data = requests.get(URL['STAT'], params=p).json()
-        if ('name' not in data) and send:
-            self.send_msg('Unknown location.')
-            return
-        self.location = data['name'] + ',' + data['sys']['country']
-        self.coord = [data['coord']['lat'],data['coord']['lon']]
+            coord = [float(i) for i in coord.split(',')]
+        p = {'lat': coord[0], 'lon': coord[1]}
+    data = requests.get(URL['STAT'], params=p).json()
+    if ('name' not in data) and send:
+        send_msg(chat_id, 'Unknown location.')
+    else:
+        coord = str(data['coord']['lat']) + ',' + str(data['coord']['lon'])
+        loc = data['name'] + ',' + data['sys']['country']
+        sql.set(chat_id, coord, loc)
         if send:
-            self.send_msg(locationset.format(self.location, self.coord))
-        self.cur.execute(sql.set(self.chat_id, '{},{}'.format(self.coord[0],self.coord[1])))
+            send_msg(chat_id, locationset.format(loc, coord))
 
-    def help(self, txt):
-        #if len(txt) == 1:
-        #    return mainhelp
-        return ''
+def get_location(chat_id, send=True):
+    result = sql.find(chat_id)
+    if send:
+        if result == None:
+            send_msg(chat_id, 'Please set location first.')
+        else:
+            send_msg(chat_id, locationset.format(result[1], ','.join(result[0])))
+    return result
 
-    def send_msg(self, text):
-        data = {'chat_id':self.chat_id, 'text':text, 'parse_mode':'Markdown'}
-        requests.post(URL['BOT'] + 'sendMessage', json=data)
+def help(text):
+    #if len(text) == 1:
+    #    return mainhelp
+    return ''
 
-    def send_img(self, img):
-        if isinstance(img, object):
-            bio = BytesIO()
-            img.save(bio, 'PNG')
-            bio.seek(0) # remove?
-            f = {'photo': ('1.png',bio,'image/png')}
-            requests.post(URL['BOT'] + 'sendPhoto?chat_id=' + str(self.chat_id), files=f)
+def send_msg(chat_id, text):
+    data = {'chat_id':chat_id, 'text':text, 'parse_mode':'Markdown'}
+    requests.post(URL['BOT'] + 'sendMessage', json=data)
+
+def send_img(chat_id, img):
+    if isinstance(img, object):
+        bio = BytesIO()
+        img.save(bio, 'PNG')
+        bio.seek(0) # remove?
+        f = {'photo': ('1.png',bio,'image/png')}
+        requests.post(URL['BOT'] + 'sendPhoto?chat_id=' + str(chat_id), files=f)
 
 def geotocoord(coord, zoom):
     n = 2**zoom
     x = n * (coord[1]+180) / 360 # lon
     lat = pi * coord[0] / 180
     y = n * (1 - (log(tan(lat) + 1/cos(lat)) / pi)) / 2
-    return floor(x), floor(y) # !!!
+    return x, y
 
 
 mainhelp = """Hi there. Here's how to use the weatherbot:
