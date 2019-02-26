@@ -1,8 +1,8 @@
 from app import cur, URL, sql
-#from weather import URL
+from app.weatherbot.weather import get_stats, get_map # change this
+from app.weatherbot import URL as wURL
 
 import requests
-from math import tan, cos, pi, floor, log
 from PIL import Image
 from io import BytesIO
 
@@ -34,38 +34,16 @@ def send_stats(chat_id):
         send_msg(chat_id, 'Please set location first.')
         return
     coord = [float(i) for i in coord[0].split(',')]
-    p = {'lat': coord[0], 'lon': coord[1]}
-    data = requests.get(URL['STAT'], params=p).json()
-    weather = {'Weather': data['weather'][0]['description']}
-    weather['Temperature'] = floor(10*data['main']['temp'] - 2731.5) / 10 # K to C
-    weather['Humidity'] = data['main']['humidity']
-    text = ''
-    for k, v in weather.items():
-        text += '{}: {}\n'.format(k,v)
-    send_msg(chat_id, text[:-1])
+    send_msg(chat_id, get_stats(coord))
 
 def send_map(chat_id, text):
     # best coords: zoom=7, x=65-66, y=41-42 - temp coord: 7/65/42 = or 5/16/10
     coord = get_location(chat_id, False)
     if coord == None:
         send_msg(chat_id, 'Please set location first.')
-        return
     else:
         coord = [float(i) for i in coord[0].split(',')]
-    z = 10
-    if len(text) == 1:
-        p = {'lat': coord[0], 'lon': coord[1], 'vt': 1, 't': 2, 'z': z}
-        data = requests.get(URL['MAP'], params=p)
-    elif text[1] == 'sat':
-        p = {'lat': coord[0], 'lon': coord[1], 'vt': 1, 't': 1, 'z': z}
-        data = requests.get(URL['MAP'], params=p)
-    else:
-        x, y = geotocoord([float(i) for i in coord[0].split(',')], z)
-        x, y = floor(x), floor(y)
-        data = requests.get(URL['WMAP'].format(text[1],z,x,y))
-    img = Image.open(BytesIO(data.content))
-    #img = Image.blend(map_img, temp_img, 0.5)
-    send_img(chat_id, img)
+        send_img(chat_id, get_map(text[1], coord, z=10))
 
 def set_location(chat_id, loc=None, coord=None, send=True):
     if coord == None:
@@ -76,7 +54,7 @@ def set_location(chat_id, loc=None, coord=None, send=True):
         elif isinstance(coord, str):
             coord = [float(i) for i in coord.split(',')]
         p = {'lat': coord[0], 'lon': coord[1]}
-    data = requests.get(URL['STAT'], params=p).json()
+    data = requests.get(wURL['STAT'], params=p).json()
     if ('name' not in data) and send:
         send_msg(chat_id, 'Unknown location.')
     else:
@@ -112,12 +90,6 @@ def send_img(chat_id, img):
         f = {'photo': ('1.png',bio,'image/png')}
         requests.post(URL['BOT'] + 'sendPhoto?chat_id=' + str(chat_id), files=f)
 
-def geotocoord(coord, zoom):
-    n = 2**zoom
-    x = n * (coord[1]+180) / 360 # lon
-    lat = pi * coord[0] / 180
-    y = n * (1 - (log(tan(lat) + 1/cos(lat)) / pi)) / 2
-    return x, y
 
 
 mainhelp = """Hi there. Here's how to use the weatherbot:
