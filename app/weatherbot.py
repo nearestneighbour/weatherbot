@@ -1,4 +1,5 @@
 from app import cur, URL, sql
+#from weather import URL
 
 import requests
 from math import tan, cos, pi, floor, log
@@ -49,15 +50,18 @@ def send_map(chat_id, text):
     if coord == None:
         send_msg(chat_id, 'Please set location first.')
         return
-    z = 7
-    x, y = geotocoord([float(i) for i in coord[0].split(',')], z)
-    x, y = floor(x), floor(y)
-    if len(text) == 1:
-        # street map
-        return
-    elif text[1] == 'sat':
-        data = requests.get(URL['SAT'].format(z, x, y))
     else:
+        coord = [float(i) for i in coord[0].split(',')]
+    z = 10
+    if len(text) == 1:
+        p = {'lat': coord[0], 'lon': coord[1], 'vt': 1, 't': 2, 'z': z}
+        data = requests.get(URL['MAP'], params=p)
+    elif text[1] == 'sat':
+        p = {'lat': coord[0], 'lon': coord[1], 'vt': 1, 't': 1, 'z': z}
+        data = requests.get(URL['MAP'], params=p)
+    else:
+        x, y = geotocoord([float(i) for i in coord[0].split(',')], z)
+        x, y = floor(x), floor(y)
         data = requests.get(URL['WMAP'].format(text[1],z,x,y))
     img = Image.open(BytesIO(data.content))
     #img = Image.blend(map_img, temp_img, 0.5)

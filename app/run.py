@@ -1,4 +1,4 @@
-from app import app, bot
+from app import app, weatherbot
 
 from flask import request
 
@@ -10,5 +10,5 @@ def getmsg():
     if 'message' in data:
         msg = data['message']
         chat_id = msg['chat']['id']
-        bot.process_msg(chat_id, msg)
+        weatherbot.process_msg(chat_id, msg)
     return ''
