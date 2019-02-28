@@ -18,4 +18,4 @@ URL = {
     #'MAP':  'https://a.tile.openstreetmap.org/{}/{}/{}.png'
 }
 
-from app.weatherbot.weatherbot import process_msg
+from .weather import process_msg

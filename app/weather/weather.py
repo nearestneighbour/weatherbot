@@ -1,10 +1,10 @@
-from app import cur, URL, sql
-from app.weatherbot.weather import get_stats, get_map # change this
-from app.weatherbot import URL as wURL
-
 import requests
 from PIL import Image
 from io import BytesIO
+
+from app import sql, URL as aURL
+from app.weather.getdata import get_stats, get_map # change this
+from app.weather import URL as wURL
 
 def process_msg(chat_id, msg):
     if 'location' in msg:
@@ -80,7 +80,7 @@ def help(text):
 
 def send_msg(chat_id, text):
     data = {'chat_id':chat_id, 'text':text, 'parse_mode':'Markdown'}
-    requests.post(URL['BOT'] + 'sendMessage', json=data)
+    requests.post(aURL['BOT'] + 'sendMessage', json=data)
 
 def send_img(chat_id, img):
     if isinstance(img, object):
@@ -88,9 +88,7 @@ def send_img(chat_id, img):
         img.save(bio, 'PNG')
         bio.seek(0) # remove?
         f = {'photo': ('1.png',bio,'image/png')}
-        requests.post(URL['BOT'] + 'sendPhoto?chat_id=' + str(chat_id), files=f)
-
-
+        requests.post(aURL['BOT'] + 'sendPhoto?chat_id=' + str(chat_id), files=f)
 
 mainhelp = """Hi there. Here's how to use the weatherbot:
 Example commands:

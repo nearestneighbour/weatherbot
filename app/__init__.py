@@ -15,5 +15,4 @@ conn = psycopg2.connect(URL['DB'], sslmode='require')
 conn.autocommit = True
 cur = conn.cursor()
 
-from app.weatherbot import weatherbot
-from app import run
+from app import tgbot

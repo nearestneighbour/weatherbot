@@ -1,6 +1,6 @@
-from app import app, weatherbot
-
 from flask import request
+
+from app import app, weather
 
 @app.route('/tgbot', methods=['POST'])
 def getmsg():
@@ -10,5 +10,5 @@ def getmsg():
     if 'message' in data:
         msg = data['message']
         chat_id = msg['chat']['id']
-        weatherbot.process_msg(chat_id, msg)
+        weather.process_msg(chat_id, msg)
     return ''
