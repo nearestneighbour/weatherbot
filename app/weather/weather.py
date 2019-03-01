@@ -3,26 +3,26 @@ from PIL import Image
 from io import BytesIO
 
 from app import sql, URL as aURL
-from app.weather.getdata import get_stats, get_map # change this
+from app.weather.weatherdata import get_stats, get_map # change this
 from app.weather import URL as wURL
 
 def process_msg(chat_id, msg):
     if 'location' in msg:
-        set_location(chat_id, coord=msg['location'])
+        set_location(chat_id=chat_id, coord=msg['location'])
     elif 'text' in msg:
         text = msg['text'].lower().split(' ')
         if text[0] == 'help':
             send_msg(chat_id, help(text))
         elif text[0] == 'location':
             if len(text) == 1:
-                get_location(chat_id)
+                get_location(chat_id=chat_id)
             else:
-                set_location(chat_id, loc=' '.join(text[1:]))
+                set_location(chat_id=chat_id, loc=' '.join(text[1:]))
         elif text[0] == 'coordinates':
             if len(text) == 1:
-                get_location(chat_id)
+                get_location(chat_id=chat_id)
             else:
-                set_location(chat_id, coord=text[1])
+                set_location(chat_id=chat_id, coord=text[1])
         elif text[0] == 'stat':
             send_stats(chat_id)
         elif text[0] == 'map':
@@ -43,11 +43,29 @@ def send_map(chat_id, text):
         send_msg(chat_id, 'Please set location first.')
     else:
         coord = [float(i) for i in coord[0].split(',')]
-        send_img(chat_id, get_map(text[1], coord, z=10))
+        send_img(chat_id, get_map(text[1], coord, z=7))
 
-def set_location(chat_id, loc=None, coord=None, send=True):
+def set_location(chat_id, coord=None, loc=None, send=True):
+    coord, loc = get_location(coord=coord, loc=loc)
+    if coord == None or loc == None:
+        send_msg(chat_id, 'Unknown location.')
+        return
+    sql.set(chat_id, coord, loc)
+    if send:
+        send_msg(chat_id, locationset.format(loc, coord))
+
+def get_location(chat_id=None, send=True, coord=None, loc=None):
     if coord == None:
-        p = {'q': loc}
+        if loc == None:
+            result = sql.find(chat_id)
+            if send:
+                if result == None:
+                    send_msg(chat_id, 'Please set location first.')
+                else:
+                    send_msg(chat_id, locationset.format(result[1], result[0]))
+            return result
+        else:
+            p = {'q': loc}
     else:
         if isinstance(coord, dict):
             coord = [coord['latitude'],coord['longitude']]
@@ -55,23 +73,13 @@ def set_location(chat_id, loc=None, coord=None, send=True):
             coord = [float(i) for i in coord.split(',')]
         p = {'lat': coord[0], 'lon': coord[1]}
     data = requests.get(wURL['STAT'], params=p).json()
-    if ('name' not in data) and send:
-        send_msg(chat_id, 'Unknown location.')
-    else:
+    if 'name' not in data:
+        return None
+    elif coord == None:
         coord = str(data['coord']['lat']) + ',' + str(data['coord']['lon'])
+    elif loc == None:
         loc = data['name'] + ',' + data['sys']['country']
-        sql.set(chat_id, coord, loc)
-        if send:
-            send_msg(chat_id, locationset.format(loc, coord))
-
-def get_location(chat_id, send=True):
-    result = sql.find(chat_id)
-    if send:
-        if result == None:
-            send_msg(chat_id, 'Please set location first.')
-        else:
-            send_msg(chat_id, locationset.format(result[1], result[0]))
-    return result
+    return coord, loc
 
 def help(text):
     #if len(text) == 1:

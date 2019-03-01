@@ -7,4 +7,4 @@ lib/
 .env
 
 old/
-*test*
+test/
