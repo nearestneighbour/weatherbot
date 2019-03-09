@@ -10,7 +10,7 @@ def getmsg():
     if data == None:
         return 'no data'
     if 'message' in data:
-        chat = data['message']['chat']['id']
+        chat_id = data['message']['chat']['id']
 
         # Check for system command (e.g. change bot)
         if 'text' in data['message']:
@@ -18,18 +18,18 @@ def getmsg():
             if txt[0] == '/' and len(txt) > 1: # change bot
                 bot = getmodule(txt=txt[1:])
                 if bot == None:
-                    send_msg(chat, 'Couldn''t change bot.')
+                    send_msg(chat_id, 'Couldn''t change bot.')
                 else:
-                    db.set('state', chat, txt[1:])
-                    send_msg(chat, 'Changed bot to: ' + txt[1:])
+                    db.set('state', chat_id, txt[1:])
+                    send_msg(chat_id, 'Changed bot to: ' + txt[1:])
                 return ''
 
         # Check for bot command
-        bot = getmodule(chat_id=chat)
+        bot = getmodule(chat_id=chat_id)
         if bot == None:
-            send_msg(chat, 'Set bot first with command /[bot].')
+            send_msg(chat_id, 'Set bot first with command /[bot].')
         else:
-            bot.process_msg(chat, data['message'])
+            bot.process_msg(chat_id, data['message'])
 
     return ''
 
