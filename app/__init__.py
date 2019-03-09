@@ -13,10 +13,11 @@ from app import sql
 
 db = sql.sql(URL['DB'])
 
-from app import weather#, wallet, wiki
+from app import weather, wallet#, wiki
 
 BOTS = {
-    'weather': sys.modules['app.weather']
+    'weather': sys.modules['app.weather'],
+    'wallet': sys.modules['app.wallet']
 }
 
 from app import tgbot
