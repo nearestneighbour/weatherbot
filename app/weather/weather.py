@@ -2,11 +2,13 @@ import requests
 from PIL import Image
 from io import BytesIO
 
-from app import sql, URL as aURL
-from app.weather.weatherdata import get_stats, get_map # change this
-from app.weather import URL as wURL
+from app import db
+from app.tgbot import send_msg, send_img
 
-def process_msg(chat_id, msg):
+from weather import URL
+from weather.weatherdata import get_stats, get_map # change this?
+
+def process_msg(chat_id, txt):
     if 'location' in msg:
         set_location(chat_id=chat_id, coord=msg['location'])
     elif 'text' in msg:
@@ -50,14 +52,16 @@ def set_location(chat_id, coord=None, loc=None, send=True):
     if coord == None or loc == None:
         send_msg(chat_id, 'Unknown location.')
         return
-    sql.set(chat_id, coord, loc)
+    db.set('location', chat_id, '_'.join([coord,loc]))
     if send:
         send_msg(chat_id, locationset.format(loc, coord))
 
 def get_location(chat_id=None, send=True, coord=None, loc=None):
     if coord == None:
         if loc == None:
-            result = sql.find(chat_id)
+            result = db.get('location', chat_id)
+            if result != None:
+                result = result.split('_')
             if send:
                 if result == None:
                     send_msg(chat_id, 'Please set location first.')
@@ -72,7 +76,7 @@ def get_location(chat_id=None, send=True, coord=None, loc=None):
         elif isinstance(coord, str):
             coord = [float(i) for i in coord.split(',')]
         p = {'lat': coord[0], 'lon': coord[1]}
-    data = requests.get(wURL['STAT'], params=p).json()
+    data = requests.get(URL['STAT'], params=p).json()
     if 'name' not in data:
         return None
     elif coord == None:
@@ -85,18 +89,6 @@ def help(text):
     #if len(text) == 1:
     #    return mainhelp
     return ''
-
-def send_msg(chat_id, text):
-    data = {'chat_id':chat_id, 'text':text, 'parse_mode':'Markdown'}
-    requests.post(aURL['BOT'] + 'sendMessage', json=data)
-
-def send_img(chat_id, img):
-    if isinstance(img, object):
-        bio = BytesIO()
-        img.save(bio, 'PNG')
-        bio.seek(0) # remove?
-        f = {'photo': ('1.png',bio,'image/png')}
-        requests.post(aURL['BOT'] + 'sendPhoto?chat_id=' + str(chat_id), files=f)
 
 mainhelp = """Hi there. Here's how to use the weatherbot:
 Example commands:
