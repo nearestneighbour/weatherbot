@@ -21,4 +21,4 @@ URL = {
 # sat map:
 # https://image.maps.api.here.com/mia/1.6/mapview?c=51.8412%2C5.8159&t=1&vt=0&z=9&app_id=SizRSPtIbyRjBjcn1oX3&app_code=eD5qwyNJwBBcK6jEG0lVXQ&w=256&h=256
 
-from weather.weather import process_msg
+from app.weather.weather import process_msg

@@ -1,14 +1,12 @@
 import requests
-from PIL import Image
-from io import BytesIO
 
 from app import db
-from app.tgbot import send_msg, send_img
+from app.chatfunc import send_msg, send_img
 
-from weather import URL
-from weather.weatherdata import get_stats, get_map # change this?
+from app.weather import URL
+from app.weather.weatherdata import get_stats, get_map # change this?
 
-def process_msg(chat_id, txt):
+def process_msg(chat_id, msg):
     if 'location' in msg:
         set_location(chat_id=chat_id, coord=msg['location'])
     elif 'text' in msg:

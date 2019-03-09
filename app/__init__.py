@@ -9,12 +9,13 @@ URL = {
     'BOT':  'https://api.telegram.org/bot' + API['TG'] + '/'
 }
 
+from app import chatfunc
 from app import sql
 db = sql.sql(URL['DB'])
 
 from app import weather#, wallet, wiki
 BOTS = {
-    'weather': sys.modules['weather']
+    'weather': sys.modules['app.weather']
 }
 
 from app import tgbot

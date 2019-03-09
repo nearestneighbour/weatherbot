@@ -3,7 +3,7 @@ from math import log, tan, cos, pi, floor
 from PIL import Image
 from io import BytesIO
 
-from weather import URL
+from app.weather import URL
 
 def get_map(map, coord, z):
     if map == 'pic':
