@@ -1,9 +1,6 @@
 import requests
 
-from app import db
-from app.chatfunc import send_msg, send_img
-
-from . import URL
+from . import URL, db, send_msg, send_img
 from .weatherdata import get_stats, get_map # change this?
 
 def process_msg(chat_id, msg):

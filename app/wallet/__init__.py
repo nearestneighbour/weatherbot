@@ -2,7 +2,7 @@ import os
 
 from app.chatfunc import send_msg, send_img
 
-from app.wallet.wallet import *
+from .wallet import *
 
 mychat = os.environ['mychat']
 ledgeracc = btc_xpub(xpub=os.environ['xpub'])
