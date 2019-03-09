@@ -76,11 +76,11 @@ def get_location(chat_id=None, send=True, coord=None, loc=None):
         p = {'lat': coord[0], 'lon': coord[1]}
     data = requests.get(URL['STAT'], params=p).json()
     if 'name' not in data:
-        return None
-    elif coord == None:
-        coord = str(data['coord']['lat']) + ',' + str(data['coord']['lon'])
-    elif loc == None:
-        loc = data['name'] + ',' + data['sys']['country']
+        return None, None
+        
+    # change this?
+    coord = str(data['coord']['lat']) + ',' + str(data['coord']['lon'])
+    loc = data['name'] + ',' + data['sys']['country']
     return coord, loc
 
 def help(text):

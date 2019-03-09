@@ -1,7 +1,5 @@
-from flask import Flask
+from flask import Flask, request
 import os, sys
-
-app = Flask(__name__)
 
 API = {'TG': os.environ['api_tg']}
 URL = {
@@ -9,13 +7,25 @@ URL = {
     'BOT':  'https://api.telegram.org/bot' + API['TG'] + '/'
 }
 
-from app import chatfunc
+app = Flask(__name__)
+
 from app import sql
+
 db = sql.sql(URL['DB'])
 
 from app import weather#, wallet, wiki
+
 BOTS = {
     'weather': sys.modules['app.weather']
 }
 
 from app import tgbot
+
+@app.route('/tgbot', methods=['POST'])
+def getmsg():
+    data = request.get_json()
+    if data == None:
+        return 'no data'
+    elif 'message' in data:
+        tgbot.process_msg(data['message'])
+        return ''
