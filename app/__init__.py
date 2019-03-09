@@ -1,18 +1,20 @@
 from flask import Flask
-import os
-import psycopg2
+import os, sys
 
-# move to weather package __init__()
+app = Flask(__name__)
+
 API = {'TG': os.environ['api_tg']}
 URL = {
     'DB':   os.environ['DATABASE_URL'],
     'BOT':  'https://api.telegram.org/bot' + API['TG'] + '/'
 }
 
-app = Flask(__name__)
+from app import sql
+db = sql.sql(URL['DB'])
 
-conn = psycopg2.connect(URL['DB'], sslmode='require')
-conn.autocommit = True
-cur = conn.cursor()
+from app import weather#, wallet, wiki
+BOTS = {
+    'weather': sys.modules['weather']
+}
 
 from app import tgbot

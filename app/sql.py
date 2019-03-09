@@ -1,13 +1,22 @@
-from app import cur
+import psycopg2
 
-def find(chat_id):
-    str = "SELECT coord,loc FROM users WHERE chat_id={};".format(chat_id)
-    cur.execute(str)
-    return cur.fetchone()
+class sql:
+    def __init__(self, url):
+        self.conn = psycopg2.connect(url, sslmode='require')
+        self.conn.autocommit = True
+        self.cur = self.conn.cursor()
 
-def set(chat_id, coord, loc):
-    if find(chat_id) == None:
-        str = "INSERT INTO users(chat_id,coord,loc) VALUES ({},'{}','{}');".format(chat_id, coord, loc)
-    else:
-        str = "UPDATE users SET coord='{}',loc='{}' WHERE chat_id={};".format(coord, loc, chat_id)
-    cur.execute(str)
+    def get(self, column, chat_id):
+        str = "SELECT {} FROM users WHERE chat_id={};".format(column, chat_id)
+        self.cur.execute(str)
+        return self.cur.fetchone()
+
+    def set(self, column, chat_id, value):
+        if self.get('chat_id', chat_id) == None:
+            str = insertstr.format(column, chat_id, value)
+        else:
+            str = updatestr.format(column, value, chat_id)
+        self.cur.execute(str)
+
+insertstr = "INSERT INTO users(chat_id,{}) VALUES ({},'{}');"
+updatestr = "UPDATE users SET {}='{}' WHERE chat_id={};"

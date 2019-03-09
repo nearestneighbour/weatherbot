@@ -1,9 +1,7 @@
 *.pyc
 **/__pycache__/
 
-bin/
-include/
-lib/
+venv/
 .env
 
 old/
