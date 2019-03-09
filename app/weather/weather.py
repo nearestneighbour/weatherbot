@@ -3,8 +3,8 @@ import requests
 from app import db
 from app.chatfunc import send_msg, send_img
 
-from app.weather import URL
-from app.weather.weatherdata import get_stats, get_map # change this?
+from . import URL
+from .weatherdata import get_stats, get_map # change this?
 
 def process_msg(chat_id, msg):
     if 'location' in msg:
@@ -77,7 +77,7 @@ def get_location(chat_id=None, send=True, coord=None, loc=None):
     data = requests.get(URL['STAT'], params=p).json()
     if 'name' not in data:
         return None, None
-        
+
     # change this?
     coord = str(data['coord']['lat']) + ',' + str(data['coord']['lon'])
     loc = data['name'] + ',' + data['sys']['country']
