@@ -1,9 +1,11 @@
 import requests
 
-from . import URL, db, send_msg, send_img
-from .weatherdata import get_stats, get_map # change this?
+from app import URL, db
+from app.chatfunc import send_msg, send_img
+from app.weatherdata import get_stats, get_map
 
-def process_msg(chat_id, msg):
+def process_msg( msg):
+    chat_id = msg['chat']['id']
     if 'location' in msg:
         set_location(chat_id=chat_id, coord=msg['location'])
     elif 'text' in msg:

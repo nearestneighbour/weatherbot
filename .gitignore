@@ -7,10 +7,3 @@ venv/
 old/
 test/
 42.png
-todo
-
-app/wallet/apiwallet/demo
-app/wallet/apiwallet/.gitignore
-app/wallet/apiwallet/LICENSE
-app/wallet/apiwallet/README.md
-app/wallet/apiwallet/testwallet.py
