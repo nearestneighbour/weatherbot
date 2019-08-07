@@ -1,5 +1,4 @@
 import os
-
 DB_URL = os.environ['DATABASE_URL']
 API_OWM = os.environ['api_owm']
 HERE_ID = os.environ['here_appid']
