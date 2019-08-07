@@ -3,7 +3,28 @@ from math import log, tan, cos, pi, floor
 from PIL import Image
 from io import BytesIO
 
-from . import URL
+from . import API_OWM
+
+url = 'http://api.openweathermap.org/data/2.5/weather?appid=' + API_OWM
+
+def get_stats(coord):
+    p = {'lat': coord[0], 'lon': coord[1]}
+    data = requests.get(url, params=p).json()
+    w = {'Weather': data['weather'][0]['description']}
+    w['Temperature'] = floor(10*data['main']['temp'] - 2731.5) / 10 # K to C
+    w['Humidity'] = data['main']['humidity']
+    text = ''
+    for k, v in w.items():
+        text += '{}: {}\n'.format(k,v)
+    return text[:-1]
+
+########## outdated
+
+#'MAP':  'https://image.maps.api.here.com/mia/1.6/mapview?app_id={}&app_code={}&nodot'
+#        .format(API['HEREID'],API['HEREC']),
+#'WMAP': 'https://tile.openweathermap.org/map/{}_new/{}/{}/{}.png?appid=' + API['OWM']
+#'SAT':  'http://sat.owm.io/sql/{}/{}/{}?from=cloudless&appid=' + api_owm,
+#'MAP':  'https://a.tile.openstreetmap.org/{}/{}/{}.png'
 
 def get_map(map, coord, z):
     if map == 'pic':
@@ -16,17 +37,6 @@ def get_map(map, coord, z):
         return Image.open(BytesIO(data.content))
     else:
         return get_weathermap(map, coord, z)
-
-def get_stats(coord):
-    p = {'lat': coord[0], 'lon': coord[1]}
-    data = requests.get(URL['STAT'], params=p).json()
-    w = {'Weather': data['weather'][0]['description']}
-    w['Temperature'] = floor(10*data['main']['temp'] - 2731.5) / 10 # K to C
-    w['Humidity'] = data['main']['humidity']
-    text = ''
-    for k, v in w.items():
-        text += '{}: {}\n'.format(k,v)
-    return text[:-1]
 
 def get_weathermap(map, coord, z):
     x, y = geotocoord(coord, z)
