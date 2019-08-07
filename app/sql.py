@@ -9,7 +9,8 @@ class sql:
     def get(self, column, chat_id):
         str = "SELECT {} FROM users WHERE chat_id={};".format(column, chat_id)
         self.cur.execute(str)
-        return self.cur.fetchone()[0]
+        result = self.cur.fetchone()
+        return result[0] if result else None
 
     def set(self, column, chat_id, value):
         if self.get('chat_id', chat_id) == None:
