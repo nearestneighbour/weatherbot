@@ -1,10 +1,10 @@
 import os
 
-API_TG = os.environ['api_tg']
+DB_URL = os.environ['DATABASE_URL']
 API_OWM = os.environ['api_owm']
 HERE_ID = os.environ['here_appid']
 HERE_CODE = os.environ['here_appc']
-DB_URL = os.environ['DATABASE_URL']
+URL_TG = os.environ['url_tg']
 
 from flask import Flask, request
 app = Flask(__name__)
