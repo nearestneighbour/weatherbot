@@ -14,28 +14,22 @@ def process_msg( msg):
 
     elif 'text' in msg:
         text = msg['text'].lower().split(' ')
+        if len(text) == 1:
+            loc = get_user_location(chat_id)
+        else:
+            loc = location(loc=' '.join(text[1:]))
+        if not (loc and loc.valid()):
+            send_msg(chat_id, 'Location unknown.')
+            return
+
         if text[0] == 'location':
             if len(text) == 1:
-                loc = get_user_location(chat_id)
-                if loc:
-                    send_msg(chat_id, loc.text())
-                else:
-                    send_msg(chat_id, "Location unknown.")
+                send_msg(chat_id, loc.text())
             else:
-                set_user_location(chat_id, loc=' '.join(text[1:]))
+                set_user_location(chat_id, loc=loc.loc) # yes
 
         elif text[0] == 'weather':
-            if len(text) == 1:
-                loc = get_user_location(chat_id)
-            else:
-                loc = location(loc=' '.join(text[1:]))
-            if loc:
-                if loc.valid():
-                    send_stats(chat_id, loc)
-                else:
-                    send_msg(chat_id, 'Location invalid')
-            else:
-                send_msg(chat_id, 'Location unknown')
+            send_stats(chat_id, loc)
 
 def send_stats(chat_id, loc):
     url = 'http://api.openweathermap.org/data/2.5/weather?appid=' + API_OWM
