@@ -6,3 +6,5 @@ venv/
 old/
 testdb.py
 todo
+
+app/weatherdata.py

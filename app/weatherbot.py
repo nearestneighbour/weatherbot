@@ -1,10 +1,9 @@
 import requests
 
-from . import DB_URL
+from . import DB_URL, API_OWM
 from .chat_utils import send_msg
 from .location import location
 from .sql import sql
-from .weatherdata import get_stats
 
 db = sql(DB_URL)
 
@@ -21,7 +20,7 @@ def process_msg( msg):
                 if loc:
                     send_msg(chat_id, loc.text())
                 else:
-                    send_msg(chat_id, "User location unknown.")
+                    send_msg(chat_id, "Location unknown.")
             else:
                 set_user_location(chat_id, loc=' '.join(text[1:]))
 
@@ -30,14 +29,26 @@ def process_msg( msg):
                 loc = get_user_location(chat_id)
             else:
                 loc = location(loc=' '.join(text[1:]))
-            send_stats(chat_id, loc)
+            if loc:
+                if loc.valid():
+                    send_stats(chat_id, loc)
+                else:
+                    send_msg(chat_id, 'Location invalid')
+            else:
+                send_msg(chat_id, 'Location unknown')
 
 def send_stats(chat_id, loc):
-    if loc.valid():
-        coord = [float(i) for i in loc.coord]
-        send_msg(chat_id, 'Weather in ' + loc.loc + ':\n' + get_stats(coord))
-    else:
-        send_msg(chat_id, 'Location invalid')
+    url = 'http://api.openweathermap.org/data/2.5/weather?appid=' + API_OWM
+    p = {'lat': loc.coord[0], 'lon': loc.coord[1]}
+    data = requests.get(url, params=p).json()
+    msgtxt = 'Weather in {}: {}\n'.format(loc.loc, data['weather'][0]['description'])
+    m = data['main']
+    temps = (m['temp'], m['temp_min'], m['temp_max'])
+    temps = ((10*i - 2731.5) // 10 for i in temps) # Kelvin to Celcius
+    msgtxt += 'Temperature: {} ({}, {})\n'.format(*temps)
+    msgtxt += 'Humidity: {}\nPressure: {}\n'.format(m['humidity'], m['pressure'])
+    msgtxt += 'Wind speed: {}'.format(data['wind']['speed'])
+    send_msg(chat_id, msgtxt)
 
 def set_user_location(chat_id, coord=None, loc=None):
     loc = location(coord=coord, loc=loc)
