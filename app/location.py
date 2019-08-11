@@ -1,9 +1,10 @@
 import requests
 
-from . import HERE_ID, HERE_CODE
+from . import HERE_APP_ID, HERE_APP_CODE
 
-loc_url = 'https://geocoder.api.here.com/6.2/geocode.json?app_id={}&app_code={}'.format(HERE_ID, HERE_CODE)
-coord_url = 'https://reverse.geocoder.api.here.com/6.2/reversegeocode.json?app_id={}&app_code={}'.format(HERE_ID, HERE_CODE)
+auth = 'app_id={}&app_code={}'.format(HERE_APP_ID, HERE_APP_CODE)
+loc_url = 'https://geocoder.api.here.com/6.2/geocode.json?' + auth
+coord_url = 'https://reverse.geocoder.api.here.com/6.2/reversegeocode.json?' + auth
 
 class location:
     def __init__(self, **kwargs):
